@@ -43,9 +43,14 @@ def new_food():
     food_surf = pygame.image.load('food.png').convert_alpha() # load the image for the food
     return food_surf, food_rect
 
+def new_wall():
+    x = random.randrange(0, WIDTH - BLOCK_SIZE, BLOCK_SIZE)
+    y = random.randrange(0, HEIGHT - BLOCK_SIZE, BLOCK_SIZE)
+    wall_rect = pygame.Rect(x, y, BLOCK_SIZE, BLOCK_SIZE)
+    return wall_rect
 
 def move_snake():
-    global direction, food
+    global direction, food, score, walls
 
     # Move the snake
     head = snake[-1].copy()
@@ -58,9 +63,11 @@ def move_snake():
     elif direction == 'right':
         head.move_ip(BLOCK_SIZE, 0)
 
+
     # Check if the snake has collided with the wall or itself
-    # if snake[-1].left < 0 or snake[-1].right > WIDTH or snake[-1].top < 0 or snake[-1].bottom > HEIGHT:
-    # game_over()
+
+    if head.collidelist(walls) != -1:
+        game_over()
 
     # Check if the head has gone off the screen in any direction
     if head.left < 0:
@@ -76,8 +83,11 @@ def move_snake():
 
     # Check if the snake has collided with the food
     if snake[-1].colliderect(food[1]):
-        food = new_food()  # generate a new food
-        #food.move_ip(random.choice(range(0, WIDTH, BLOCK_SIZE)), random.choice(range(0, HEIGHT, BLOCK_SIZE)))
+        food = new_food() # generate a new food
+        score += 1
+        if score % 10 == 0:
+            walls.append(new_wall())
+
     else:
         snake.pop(0)
 
@@ -105,16 +115,24 @@ def game_over():
                 waiting = False
 
 
+
+
 # Initialize game variables
+global snake, direction, walls, score
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Snake')
 clock = pygame.time.Clock()
 direction = 'right'
+walls = []
+score = 0
 snake = [pygame.Rect(60, 80, BLOCK_SIZE, BLOCK_SIZE),
          pygame.Rect(40, 80, BLOCK_SIZE, BLOCK_SIZE),
          pygame.Rect(20, 80, BLOCK_SIZE, BLOCK_SIZE)]
 food = new_food()
 running = True
+
+
+
 # Load the image for the snake head
 #head_img2 = pygame.image.load('snake_head_2.png').convert_alpha()
 head_img = {
@@ -161,8 +179,16 @@ while running:
             screen.blit(head_surf, head_rect)
         else:
             pygame.draw.rect(screen, GREEN, block)
+
     screen.blit(food[0], food[1]) # draw the food image
     draw_text(screen, f'Score: {len(snake) - 3}', 18, WIDTH / 2, 10)
+
+    # Draw the walls
+    for wall in walls:
+        pygame.draw.rect(screen, BLUE, wall)
+
+    # Draw the score
+    draw_text(screen, 'Score: ' + str(score), 18, WIDTH / 2, 10)
 
     # Update display
     pygame.display.flip()
