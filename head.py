@@ -5,10 +5,10 @@ import random
 pygame.init()
 
 # Define game constants
-#WIDTH = 640
-#HEIGHT = 480
-WIDTH = 1920
-HEIGHT = 1080
+WIDTH = 640
+HEIGHT = 480
+#WIDTH = 1920
+#HEIGHT = 1080
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 BLOCK_SIZE = 20
 FPS = 10
@@ -35,10 +35,13 @@ def draw_text(surface, text, size, x, y):
 
 
 # Define game functions
+
 def new_food():
     x = random.randrange(0, WIDTH, BLOCK_SIZE)
     y = random.randrange(0, HEIGHT, BLOCK_SIZE)
-    return pygame.Rect(x, y, BLOCK_SIZE, BLOCK_SIZE)
+    food_rect = pygame.Rect(x, y, BLOCK_SIZE, BLOCK_SIZE)
+    food_surf = pygame.image.load('food.png').convert_alpha() # load the image for the food
+    return food_surf, food_rect
 
 
 def move_snake():
@@ -54,22 +57,34 @@ def move_snake():
         head.move_ip(-BLOCK_SIZE, 0)
     elif direction == 'right':
         head.move_ip(BLOCK_SIZE, 0)
+
+    # Check if the snake has collided with the wall or itself
+    # if snake[-1].left < 0 or snake[-1].right > WIDTH or snake[-1].top < 0 or snake[-1].bottom > HEIGHT:
+    # game_over()
+
+    # Check if the head has gone off the screen in any direction
+    if head.left < 0:
+        head.right = WIDTH
+    elif head.right > WIDTH:
+        head.left = 0
+    elif head.top < 0:
+        head.bottom = HEIGHT
+    elif head.bottom > HEIGHT:
+        head.top = 0
+
     snake.append(head)
 
     # Check if the snake has collided with the food
-    if snake[-1].colliderect(food):
+    if snake[-1].colliderect(food[1]):
         food = new_food()  # generate a new food
         #food.move_ip(random.choice(range(0, WIDTH, BLOCK_SIZE)), random.choice(range(0, HEIGHT, BLOCK_SIZE)))
     else:
         snake.pop(0)
 
-    # Check if the snake has collided with the wall or itself
-    if snake[-1].left < 0 or snake[-1].right > WIDTH or snake[-1].top < 0 or snake[-1].bottom > HEIGHT:
-        pygame.quit()
+        #######pygame.quit()
     for block in snake[:-1]:
         if block == snake[-1]:
             game_over()
-
 
 
 def game_over():
@@ -146,7 +161,7 @@ while running:
             screen.blit(head_surf, head_rect)
         else:
             pygame.draw.rect(screen, GREEN, block)
-    pygame.draw.rect(screen, RED, food)
+    screen.blit(food[0], food[1]) # draw the food image
     draw_text(screen, f'Score: {len(snake) - 3}', 18, WIDTH / 2, 10)
 
     # Update display
